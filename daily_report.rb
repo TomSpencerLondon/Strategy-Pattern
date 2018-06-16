@@ -1,37 +1,29 @@
 require 'csv'
 require_relative 'email_service'
+require_relative 'csv_formatter'
+require_relative 'html_formatter'
 
 class DailyReport
-  attr_reader :type
+  attr_reader :formatter
 
-  def initialize(type)
-    @type = type 
+  def initialize (formatter:)
+    @formatter = formatter
   end 
 
   def call
     data = get_data
-    write_csv(data) if @type == :csv  
-    write_html(data) if @type == :html
+    write_report(data)
     send_email
   end 
 
   private
 
-  def send_email(from:"reports@mycompany.co.uk", to:"boss@mycompany.co.uk")
-    EmailService.send_email(from: from,to: to, body: "Hi boss, the report is ready")
-  end  
-
-  def write 
-    
+  def write_report(data)
+    @formatter.write_report(data)
   end 
 
-  def write_csv(data)
-    CSV.open("./output/report.csv",  "w") do |csv| 
-      csv << ["user_email", "registration_date", "account_type"]
-      data.each do |entry| 
-        csv << entry
-      end 
-    end 
+  def send_email(from:"reports@mycompany.co.uk", to:"boss@mycompany.co.uk")
+    EmailService.send_email(from: from,to: to, body: "Hi boss, the report is ready")
   end 
 
   def get_data
@@ -46,3 +38,8 @@ end
 # Initialize or call method two options for giving decision 
 # DailyReport.new(type: :csv).call
 # DailyReport.new.call(type: :csv)
+
+# Instead of using an if statement we are using polymorphism. If we have a daily report the 
+# daily report has sub classes and each subclass has variation on the original configuration. 
+# For each of the configuration points we create different classes
+# A different daily report method will be called as to whether it is a html or csv daily report. 
